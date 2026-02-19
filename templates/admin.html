@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Gelen Konumlar Haritası</title>
+    <title>Canlı Takip Paneli</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>#map { height: 100vh; width: 100%; }</style>
 </head>
@@ -9,18 +9,29 @@
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([0, 0], 2);
+        var map = L.map('map').setView([39.93, 32.85], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        var userMarkers = {}; // Her kullanıcıyı ayrı tutmak için
 
-        fetch('/locations')
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(loc => {
-                    L.marker([loc.latitude, loc.longitude]).addTo(map)
-                        .bindPopup("Zaman: " + new Date(loc.timestamp * 1000).toLocaleString());
-                    map.setView([loc.latitude, loc.longitude], 13);
+        function updateMap() {
+            fetch('/locations')
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(loc => {
+                        // Eğer bu kullanıcı için iğne yoksa oluştur, varsa yerini değiştir
+                        if (userMarkers[loc.id]) {
+                            userMarkers[loc.id].setLatLng([loc.latitude, loc.longitude]);
+                        } else {
+                            userMarkers[loc.id] = L.marker([loc.latitude, loc.longitude]).addTo(map)
+                                .bindPopup("Cihaz: " + loc.id + "<br>Saat: " + new Date(loc.timestamp * 1000).toLocaleTimeString());
+                        }
+                    });
                 });
-            });
+        }
+
+        // 3 saniyede bir yeni konumları kontrol et
+        setInterval(updateMap, 3000);
     </script>
 </body>
 </html>
