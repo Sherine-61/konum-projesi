@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, render_template
 import time
 
 app = Flask(__name__)
-# Tüm kullanıcıların konum geçmişini tutan liste
 all_locations = []
 
 @app.route("/")
@@ -14,7 +13,12 @@ def receive_location():
     data = request.json
     lat = data.get("latitude")
     lon = data.get("longitude")
-    user_id = request.remote_addr  # IP adresine göre kişileri ayırır
+    
+    # Render/Proxy arkasındaki gerçek IP'yi yakalamak için:
+    user_id = request.headers.get('X-Forwarded-For', request.remote_addr)
+    # Eğer birden fazla IP gelirse ilkini al
+    if ',' in user_id:
+        user_id = user_id.split(',')[0]
     
     if lat and lon:
         all_locations.append({
